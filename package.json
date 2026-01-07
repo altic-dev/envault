@@ -1,0 +1,46 @@
+{
+  "name": "envault",
+  "version": "0.1.0",
+  "description": "Centralized environment variable management CLI",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "envault": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "bun --watch src/cli/index.ts",
+    "build": "bun build src/cli/index.ts --outdir dist --target bun --minify",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "prepublishOnly": "bun run build"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "env",
+    "environment",
+    "dotenv",
+    "cli",
+    "ai-agent",
+    "developer-tools"
+  ],
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/you/envault.git"
+  }
+}
