@@ -14,29 +14,6 @@ Envault is a CLI tool that helps you manage environment variables across multipl
 - **Git-Based Projects**: Automatic project detection via git repository root
 - **Partial Value Display**: Shows masked values (first4...last4) for security
 
-## Installation
-
-### Using Bun (recommended)
-
-```bash
-bun install -g envault-manager
-```
-
-### Using npm
-
-```bash
-npm install -g envault-manager
-```
-
-### From source
-
-```bash
-git clone https://github.com/altic-dev/envault.git
-cd envault
-bun install
-bun run build
-bun link
-```
 ## Using envault as a skill
 
 The envault skill allows AI terminal agents to manage environment variables on your behalf using structured commands instead of direct file manipulation.
@@ -82,6 +59,30 @@ cp skills/envault-manager/SKILL.md ~/.config/agents/skills/envault-manager/SKILL
 ```
 
 Then restart Amp to load the skill.
+
+## Installation
+
+### Using Bun (recommended)
+
+```bash
+bun install -g envault-manager
+```
+
+### Using npm
+
+```bash
+npm install -g envault-manager
+```
+
+### From source
+
+```bash
+git clone https://github.com/altic-dev/envault.git
+cd envault
+bun install
+bun run build
+bun link
+```
 
 ## Quick Start
 
