@@ -42,6 +42,7 @@ Commands:
   var get          Retrieve the full value of a variable
   var set          Add or update an environment variable
   var unset        Unset (remove) a variable
+  var clear        Remove all variables in a project (optionally scoped by --env)
   var copy         Copy variables from another tracked project into the current repo
   sync            Sync between project files and the store (db)
   help            Show help for a command
@@ -60,7 +61,9 @@ Examples:
   envault var get DATABASE_URL     # Get full value
   envault var set API_KEY          # Set interactively
   envault var unset API_KEY        # Unset (with confirmation)
-  envault sync                    # Sync from .env files
+  envault var clear --yes          # Clear all vars in current repo (non-interactive)
+  envault sync                    # Sync store → project (db → .env*)
+  envault sync --from project     # Sync project → store (.env* → db)
   envault var copy backend        # Copy vars from backend into current repo
 
 For command-specific help:
@@ -121,6 +124,7 @@ Usage:
   envault var get <KEY> [--env ENV]
   envault var set <KEY> [--env ENV] [--value VALUE] [--multiline]
   envault var unset <KEY> [--env ENV]
+  envault var clear [--project PROJECT] [--env ENV] [--yes]
   envault var copy <fromProject> [KEY] [--from-env ENV] [--env ENV]
 
 Examples:
@@ -130,6 +134,7 @@ Examples:
   envault var set API_KEY --env prod
   envault var set API_KEY --value "secret"
   envault var unset API_KEY
+  envault var clear --yes
   envault var copy backend
   envault var copy backend DATABASE_URL --from-env prod --env staging`);
     return;
@@ -177,6 +182,19 @@ Usage:
 
 Options:
   --env ENV       Environment to unset from (default: default)`);
+      return;
+    case "clear":
+      console.log(`envault var clear - Remove all variables in a project
+
+Usage:
+  envault var clear                         # Clear all variables for current repo (all envs)
+  envault var clear --env <env>             # Clear variables in one environment
+  envault var clear --project <project>     # Clear variables for a tracked project
+
+Options:
+  --project <project>    Project name (alias: -p)
+  --env ENV              Environment to clear (default: all environments)
+  --yes                  Skip confirmation (alias: -y)`);
       return;
     case "copy":
       console.log(`envault var copy - Copy variables from another tracked project into the current repo

@@ -25,6 +25,9 @@ export async function variable(args: ParsedArgs, db: EnvaultDB): Promise<void> {
     case "unset":
       await unsetVar(args, db);
       return;
+    case "clear":
+      await clearVars(args, db);
+      return;
     case "copy":
       await copyVar(args, db);
       return;
@@ -35,6 +38,7 @@ export async function variable(args: ParsedArgs, db: EnvaultDB): Promise<void> {
       console.error("  envault var get <KEY> [--env ENV]");
       console.error("  envault var set <KEY> [--env ENV] [--value VALUE] [--multiline]");
       console.error("  envault var unset <KEY> [--env ENV]");
+      console.error("  envault var clear [-p PROJECT] [--env ENV] [--yes]");
       console.error("  envault var copy <fromProject> [KEY] [--from-env ENV] [--env ENV]");
       process.exit(1);
   }
@@ -246,6 +250,117 @@ async function unsetVar(args: ParsedArgs, db: EnvaultDB): Promise<void> {
 
   await writeEnvFile(db, project.id, gitRoot, environment);
   console.log(`✓ Unset ${key} from ${projectName}${envMsg}`);
+}
+
+async function clearVars(args: ParsedArgs, db: EnvaultDB): Promise<void> {
+  const projectNameFlag = args.flags.project;
+  const environment = args.flags.env;
+  const yes = args.flags.yes ?? false;
+
+  if (args.flags.all && environment) {
+    console.error("Error: Use either --env (clear one environment) or --all (clear all), not both.");
+    process.exit(1);
+  }
+
+  // Resolve project
+  let projectName: string;
+  let projectId: number;
+  let gitRoot: string | null = null;
+
+  if (projectNameFlag) {
+    const projects = db.findProjectByName(projectNameFlag);
+
+    if (projects.length === 0) {
+      console.error(`Error: Project '${projectNameFlag}' not found\n`);
+      console.error("Available projects:");
+      const allProjects = db.listProjects();
+      if (allProjects.length > 0) {
+        console.error(formatProjects(allProjects, false));
+      } else {
+        console.error("  (no projects tracked yet)");
+      }
+      console.error("\nUse 'envault project list' to see all projects.");
+      process.exit(1);
+    }
+
+    let project = projects[0]!;
+    if (projects.length > 1) {
+      console.log(`Multiple projects named '${projectNameFlag}' found:`);
+      projects.forEach((p, i) => {
+        console.log(`${i + 1}. ${p.path}`);
+      });
+      console.log();
+      console.log(`Using: ${project.path}\n`);
+    }
+
+    projectName = project.name;
+    projectId = project.id;
+    // Intentionally do NOT write .env files for other projects from here.
+  } else {
+    gitRoot = requireGitRoot();
+    projectName = getProjectName(gitRoot);
+    const project = db.findProjectByPath(gitRoot);
+
+    if (!project) {
+      console.error("Error: Project not tracked yet\n");
+      console.error("Run 'envault sync' or 'envault var set <KEY>' to start tracking it.");
+      process.exit(1);
+    }
+
+    projectId = project.id;
+  }
+
+  // Determine target environments (default: all envs in the project)
+  const targetEnvs = environment ? [environment] : db.listEnvironments(projectId);
+
+  if (targetEnvs.length === 0) {
+    console.log(`No variables found in ${projectName}.`);
+    return;
+  }
+
+  let total = 0;
+  for (const env of targetEnvs) {
+    total += db.listVariables(projectId, env).length;
+  }
+
+  if (total === 0) {
+    const scope = environment ? ` (${environment})` : "";
+    console.log(`No variables found in ${projectName}${scope}.`);
+    return;
+  }
+
+  const scopeLabel = environment ? `environment '${environment}'` : "all environments";
+  if (!yes) {
+    const ok = await confirm(
+      `Remove ${total} variable${total === 1 ? "" : "s"} from ${projectName} (${scopeLabel})? (y/n): `
+    );
+    if (!ok) {
+      console.log("Aborted.");
+      process.exit(1);
+    }
+  }
+
+  // Delete
+  let deleted = 0;
+  if (environment) {
+    deleted = db.deleteVariables(projectId, environment);
+  } else {
+    deleted = db.deleteVariables(projectId);
+  }
+
+  // If clearing current repo, rewrite affected env files so project state matches store.
+  if (gitRoot) {
+    const envsToWrite = environment ? [environment] : targetEnvs;
+    for (const env of envsToWrite) {
+      await writeEnvFile(db, projectId, gitRoot, env);
+    }
+  }
+
+  const scopeMsg = environment ? ` (${environment})` : "";
+  console.log(`✓ Removed ${deleted} variable${deleted === 1 ? "" : "s"} from ${projectName}${scopeMsg}`);
+  if (projectNameFlag) {
+    console.log("Note: To update .env files, run 'envault sync' inside that repository.");
+  }
 }
 
 async function copyVar(args: ParsedArgs, db: EnvaultDB): Promise<void> {

@@ -129,6 +129,15 @@ envault var set SSL_CERT --multiline
 # Unset (remove) a variable (with confirmation)
 envault var unset OLD_VAR
 
+# Clear (remove) ALL variables in a project (with confirmation unless --yes)
+envault var clear
+
+# Clear variables for one environment only
+envault var clear --env prod
+
+# Clear variables for a tracked project by name (store only; run sync in that repo to update .env files)
+envault var clear --project my-app --yes
+
 # Copy variables from another tracked project into the current repo
 envault var copy backend
 envault var copy backend DATABASE_URL --from-env prod --env staging
@@ -142,7 +151,7 @@ Sync variables between your project (`.env*` files) and the store (database).
 # Sync store → project (default): write .env* files from database
 envault sync
 
-# Import .env* into store
+# Sync project → store (.env* → db): import .env* into the store
 envault sync --from project
 ```
 

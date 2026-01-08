@@ -88,6 +88,7 @@ Commands:
   var get          Retrieve the full value of a variable
   var set          Add or update an environment variable
   var unset        Unset (remove) a variable
+  var clear        Remove all variables in a project (optionally scoped by --env)
   var copy         Copy variables from another tracked project into the current repo
   sync            Sync between project files and the store (db)
   help            Show help for a command
@@ -106,6 +107,7 @@ Examples:
   envault var get DATABASE_URL     # Get full value
   envault var set API_KEY          # Set interactively
   envault var unset API_KEY        # Unset (with confirmation)
+  envault var clear --yes          # Clear all vars in current repo (non-interactive)
   envault sync                    # Sync store → project (db → .env*)
   envault sync --from project     # Sync project → store (.env* → db)
   envault var copy backend        # Copy variables from backend into current repo

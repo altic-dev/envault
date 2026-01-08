@@ -14,6 +14,7 @@ export interface ParsedArgs {
     multiline?: boolean;
     strict?: boolean;
     all?: boolean;
+    yes?: boolean;
   };
 }
 
@@ -71,6 +72,8 @@ export function parseArgs(argv: string[]): ParsedArgs {
           result.flags.project = nextArg;
           i++; // Skip next arg
         }
+      } else if (flagName === "y") {
+        result.flags.yes = true;
       } else if (flagName === "all") {
         result.flags.all = true;
       }
@@ -90,7 +93,7 @@ export function parseArgs(argv: string[]): ParsedArgs {
 }
 
 function isBooleanFlag(name: string): boolean {
-  return ["help", "version", "json", "multiline", "strict", "all"].includes(name);
+  return ["help", "version", "json", "multiline", "strict", "all", "yes"].includes(name);
 }
 
 function parseBooleanFlag(flags: ParsedArgs["flags"], name: string): void {
@@ -112,6 +115,9 @@ function parseBooleanFlag(flags: ParsedArgs["flags"], name: string): void {
       break;
     case "all":
       flags.all = true;
+      break;
+    case "yes":
+      flags.yes = true;
       break;
   }
 }

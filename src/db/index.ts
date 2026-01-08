@@ -130,6 +130,19 @@ export class EnvaultDB {
     return result.changes > 0;
   }
 
+  deleteVariables(projectId: number, env?: string): number {
+    if (env) {
+      const result = this.db.run(
+        "DELETE FROM variables WHERE project_id = ? AND environment = ?",
+        [projectId, env]
+      );
+      return result.changes;
+    }
+
+    const result = this.db.run("DELETE FROM variables WHERE project_id = ?", [projectId]);
+    return result.changes;
+  }
+
   // Sync operations
   syncVariables(projectId: number, env: string, vars: Record<string, string>): void {
     // Use upsert for each variable
