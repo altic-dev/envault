@@ -37,6 +37,51 @@ bun install
 bun run build
 bun link
 ```
+## Using envault as a skill
+
+The envault skill allows AI terminal agents to manage environment variables on your behalf using structured commands instead of direct file manipulation.
+
+### Claude Code
+
+Install the envault skill from the marketplace:
+
+```bash
+/plugin marketplace add altic-dev/envault
+/plugin install envault-manager
+```
+
+### Codex (OpenAI)
+
+Copy the skill file to your Codex skills directory:
+
+```bash
+mkdir -p ~/.codex/skills
+cp skills/envault-manager/SKILL.md ~/.codex/skills/envault-manager.md
+```
+
+Then restart Codex to load the skill.
+
+### OpenCode
+
+Copy the skill file to your OpenCode skills directory:
+
+```bash
+mkdir -p ~/.opencode/skills/envault-manager
+cp skills/envault-manager/SKILL.md ~/.opencode/skills/envault-manager/SKILL.md
+```
+
+Then restart OpenCode to load the skill.
+
+### Amp
+
+Copy the skill file to your Amp skills directory:
+
+```bash
+mkdir -p ~/.config/agents/skills/envault-manager
+cp skills/envault-manager/SKILL.md ~/.config/agents/skills/envault-manager/SKILL.md
+```
+
+Then restart Amp to load the skill.
 
 ## Quick Start
 
