@@ -10,7 +10,13 @@ export async function sync(args: ParsedArgs, db: EnvaultDB): Promise<void> {
   const gitRoot = requireGitRoot();
   const projectName = getProjectName(gitRoot);
 
-  const from = args.flags.from ?? "project";
+  if (args.flags.from === "store") {
+    console.error(`Error: '--from store' has been removed.\n`);
+    console.error("Use 'envault sync' to sync store → project instead.");
+    process.exit(1);
+  }
+
+  const from = args.flags.from ?? "store";
 
   if (from !== "project" && from !== "store") {
     console.error(`Error: Invalid value for --from: ${from}\n`);

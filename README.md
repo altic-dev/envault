@@ -139,14 +139,11 @@ envault var copy backend DATABASE_URL --from-env prod --env staging
 Sync variables between your project (`.env*` files) and the store (database).
 
 ```bash
-# Sync project → store (default): discover .env* and import into the store
+# Sync store → project (default): write .env* files from database
 envault sync
 
-# Explicit import direction
+# Import .env* into store
 envault sync --from project
-
-# Sync store → project (write .env* files from database)
-envault sync --from store
 ```
 
 File mapping:

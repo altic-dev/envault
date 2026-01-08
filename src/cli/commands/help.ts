@@ -203,17 +203,17 @@ function showSyncHelp(): void {
   console.log(`envault sync - Sync between project files and the store (db)
 
 Usage:
-  envault sync [--from project|store]
+  envault sync [--from project]
 
 Description:
-  Default behavior is project → store: discovers all .env* files in the git
-  repository root and syncs them to the store (database).
-
-  With --from store, syncs store → project: writes .env* files from the store
+  Default behavior is store → project: writes .env* files from the store
   into the repository root without modifying the store.
 
+  With --from project, syncs project → store: discovers all .env* files in the git
+  repository root and syncs them to the store (database).
+
 Options:
-  --from <project|store>   Direction (default: project)
+  --from <project>   Direction (default: store)
 
   File mapping:
     .env          → default environment
@@ -222,12 +222,9 @@ Options:
     .env.<name>   → <name> environment
 
 Examples:
-  # Import .env* into store (default)
+  # Export store into .env* files (default)
   envault sync
 
-  # Explicit import direction
+  # Import .env* into store
   envault sync --from project
-
-  # Export store into .env* files
-  envault sync --from store`);
 }

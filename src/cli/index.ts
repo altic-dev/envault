@@ -106,8 +106,8 @@ Examples:
   envault var get DATABASE_URL     # Get full value
   envault var set API_KEY          # Set interactively
   envault var unset API_KEY        # Unset (with confirmation)
-  envault sync                    # Sync project → store (.env* → db)
-  envault sync --from store       # Sync store → project (db → .env*)
+  envault sync                    # Sync store → project (db → .env*)
+  envault sync --from project     # Sync project → store (.env* → db)
   envault var copy backend        # Copy variables from backend into current repo
 
 For command-specific help:

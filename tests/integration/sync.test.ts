@@ -15,7 +15,7 @@ function makeArgs(flags?: { from?: string }) {
   };
 }
 
-test("sync: default project → store imports .env* into store", async () => {
+test("sync: --from project imports .env* into store", async () => {
   const base = await makeTempDir();
   const repoDir = join(base, "app");
   await mkdir(repoDir, { recursive: true });
@@ -28,7 +28,7 @@ test("sync: default project → store imports .env* into store", async () => {
   const db = new EnvaultDB(join(base, "envault.db"));
   try {
     await withCwd(repo, async () => {
-      await sync(makeArgs(), db);
+      await sync(makeArgs({ from: "project" }), db);
     });
 
     const project = db.findProjectByPath(repo);
@@ -41,7 +41,7 @@ test("sync: default project → store imports .env* into store", async () => {
   }
 });
 
-test("sync: --from store writes .env* files without mutating store", async () => {
+test("sync: default store → project writes .env* files without mutating store", async () => {
   const base = await makeTempDir();
   const repoDir = join(base, "app");
   await mkdir(repoDir, { recursive: true });
@@ -57,7 +57,7 @@ test("sync: --from store writes .env* files without mutating store", async () =>
     const before = db.listVariables(projectId).map((v) => `${v.environment}:${v.key}=${v.value}`);
 
     await withCwd(repo, async () => {
-      await sync(makeArgs({ from: "store" }), db);
+      await sync(makeArgs(), db);
     });
 
     const after = db.listVariables(projectId).map((v) => `${v.environment}:${v.key}=${v.value}`);
