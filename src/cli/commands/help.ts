@@ -2,6 +2,7 @@ import type { ParsedArgs } from "../args.ts";
 
 export async function help(args: ParsedArgs): Promise<void> {
   const command = args.args[0];
+  const sub = args.args[1];
 
   if (!command) {
     showGlobalHelp();
@@ -9,6 +10,15 @@ export async function help(args: ParsedArgs): Promise<void> {
   }
 
   switch (command) {
+    case "project":
+      showProjectHelp(sub);
+      break;
+    case "env":
+      showEnvHelp(sub);
+      break;
+    case "var":
+      showVarHelp(sub);
+      break;
     case "ls":
       showLsHelp();
       break;
@@ -30,8 +40,8 @@ export async function help(args: ParsedArgs): Promise<void> {
     case "sync":
       showSyncHelp();
       break;
-    case "rm":
-      showRmHelp();
+    case "unset":
+      showUnsetHelp();
       break;
     default:
       console.error(`Unknown command: ${command}`);
@@ -47,14 +57,20 @@ Usage:
   envault <command> [options]
 
 Commands:
+  project list     List all tracked projects
+  env list         List environments (current repo, or use --project)
+  var list         List variables (current repo, or use --project)
+  var get          Retrieve the full value of a variable
+  var set          Add or update an environment variable
+  var unset        Unset (remove) a variable
   ls              List all projects or variables in a project
   envs            List environments for a project
   add             Add or update an environment variable
   cp              Copy variables from another tracked project
   get             Retrieve the full value of a variable
   update          Update an existing variable (alias for add)
-  sync            Sync variables from .env files to database
-  rm              Remove a variable
+  sync            Sync variables between project and store
+  unset           Unset (remove) a variable
   help            Show help for a command
 
 Global Options:
@@ -63,8 +79,16 @@ Global Options:
   --json          Output in JSON format (where applicable)
 
 Examples:
+  envault project list             # List all projects
+  envault env list                 # List envs for current repo
+  envault env list --project my-app # List envs for tracked project
+  envault var list                 # List vars for current repo
+  envault var list --project my-app # List vars for tracked project
+  envault var get DATABASE_URL     # Get full value
+  envault var set API_KEY          # Set interactively
+  envault var unset API_KEY        # Unset (with confirmation)
   envault ls                      # List all projects
-  envault ls -p my-app            # List variables in my-app
+  envault ls --project my-app      # List variables in my-app
   envault envs                    # List environments in current repo
   envault add DATABASE_URL        # Add variable interactively
   envault cp backend              # Copy all variables from backend
@@ -72,9 +96,121 @@ Examples:
   envault sync                    # Sync from .env files
 
 For command-specific help:
-  envault help <command>
+  envault help <command> [subcommand]
 
 Documentation: https://github.com/you/envault`);
+}
+
+function showProjectHelp(sub?: string): void {
+  if (!sub || sub === "list") {
+    console.log(`envault project - Manage tracked projects
+
+Usage:
+  envault project list
+
+Options:
+  --json          Output in JSON format
+
+Examples:
+  envault project list
+  envault project list --json`);
+    return;
+  }
+
+  console.error(`Unknown subcommand: project ${sub}`);
+  process.exit(1);
+}
+
+function showEnvHelp(sub?: string): void {
+  if (!sub || sub === "list") {
+    console.log(`envault env - Manage environments
+
+Usage:
+  envault env list                 # List environments for current repo
+  envault env list --project <project>    # List environments for a tracked project
+
+Options:
+  --project <project>    Project name (alias: -p)
+  --json          Output a JSON array
+
+Examples:
+  envault env list
+  envault env list --project backend
+  envault env list --json`);
+    return;
+  }
+
+  console.error(`Unknown subcommand: env ${sub}`);
+  process.exit(1);
+}
+
+function showVarHelp(sub?: string): void {
+  if (!sub) {
+    console.log(`envault var - Manage environment variables
+
+Usage:
+  envault var list [--project PROJECT] [--env ENV] [--json]
+  envault var get <KEY> [--env ENV]
+  envault var set <KEY> [--env ENV] [--value VALUE] [--multiline]
+  envault var unset <KEY> [--env ENV]
+
+Examples:
+  envault var list
+  envault var list --project backend --env prod
+  envault var get DATABASE_URL
+  envault var set API_KEY --env prod
+  envault var set API_KEY --value "secret"
+  envault var unset API_KEY`);
+    return;
+  }
+
+  switch (sub) {
+    case "list":
+      console.log(`envault var list - List variables
+
+Usage:
+  envault var list                 # List variables for current repo
+  envault var list --project <project>    # List variables for a tracked project
+  envault var list --env <env>     # Filter by environment
+
+Options:
+  --project <project>    Project name (alias: -p)
+  --env ENV       Filter by environment
+  --json          Output in JSON format`);
+      return;
+    case "get":
+      console.log(`envault var get - Retrieve the full value of a variable
+
+Usage:
+  envault var get <KEY> [--env ENV]
+
+Options:
+  --env ENV       Environment to get from (default: default)`);
+      return;
+    case "set":
+      console.log(`envault var set - Add or update an environment variable
+
+Usage:
+  envault var set <KEY> [value] [--env ENV] [--value VALUE] [--multiline]
+
+Options:
+  --env ENV           Target environment (default: default)
+  --value VALUE       Provide a value non-interactively (quote if it contains spaces)
+  --multiline         Enable multiline value input (Ctrl+D to finish)`);
+      return;
+    case "unset":
+      console.log(`envault var unset - Unset (remove) a variable
+
+Usage:
+  envault var unset <KEY> [--env ENV]
+
+Options:
+  --env ENV       Environment to unset from (default: default)`);
+      return;
+    default:
+      console.error(`Unknown subcommand: var ${sub}`);
+      process.exit(1);
+  }
 }
 
 function showLsHelp(): void {
@@ -82,11 +218,11 @@ function showLsHelp(): void {
 
 Usage:
   envault ls                      # List all projects
-  envault ls -p <project>         # List variables in a project
-  envault ls -p <project> --env <env>  # List variables in specific environment
+  envault ls --project <project>         # List variables in a project
+  envault ls --project <project> --env <env>  # List variables in specific environment
 
 Options:
-  -p <project>    Project name to list variables for
+  --project <project>    Project name to list variables for (alias: -p)
   --env ENV       Filter by environment (default: show all)
   --json          Output in JSON format
 
@@ -95,10 +231,10 @@ Examples:
   envault ls
 
   # List all variables in current project
-  envault ls -p my-app
+  envault ls --project my-app
 
   # List variables in production environment
-  envault ls -p my-app --env prod
+  envault ls --project my-app --env prod
 
   # List in JSON format
   envault ls --json`);
@@ -109,10 +245,10 @@ function showEnvsHelp(): void {
 
 Usage:
   envault envs                    # List environments for current repo
-  envault envs -p <project>       # List environments for a tracked project
+  envault envs --project <project>       # List environments for a tracked project
 
 Options:
-  -p <project>    Project name to list environments for
+  --project <project>    Project name to list environments for (alias: -p)
   --json          Output a JSON array
 
 Examples:
@@ -120,7 +256,7 @@ Examples:
   envault envs
 
   # List environments for a project by name
-  envault envs -p Glu-Website
+  envault envs --project Glu-Website
 
   # Machine-readable output
   envault envs --json`);
@@ -131,17 +267,12 @@ function showAddHelp(): void {
 
 Usage:
   envault add <KEY> [value] [options]
-  envault add -p <project> <KEY> [options]
-  envault add -all -p <project> [options]
 
 Options:
   --env ENV           Target environment (default: default)
-                      Writes to .env.ENV file
+                      Writes to .env.<env> file (or .env for default)
   --multiline         Enable multiline value input
                       End input with Ctrl+D
-  -p <project>        Copy variable from another project
-  -all                Copy all variables (used with -p)
-  --to-env ENV        Target environment for cross-project copy
 
 Examples:
   # Add variable interactively (recommended for secrets)
@@ -154,27 +285,20 @@ Examples:
   envault add API_KEY --env prod
 
   # Multiline value (certificate, JSON, etc.)
-  envault add SSL_CERT --multiline
-
-  # Copy from another project
-  envault add -p my-api DATABASE_URL
-
-  # Copy all variables from prod environment
-  envault add -all -p my-api --env prod
-
-  # Copy to staging environment
-  envault add -p backend DATABASE_URL --to-env staging`);
+  envault add SSL_CERT --multiline`);
 }
 
 function showCpHelp(): void {
   console.log(`envault cp - Copy variables from another tracked project
 
 Usage:
-  envault cp <project> [KEY] [--env ENV] [--to-env ENV]
+  envault cp <project> [KEY] [--from-env ENV] [--env ENV|--environment ENV|--to-env ENV]
 
 Options:
-  --env ENV        Source environment (default: all environments)
-  --to-env ENV     Target environment (default: keep source environment)
+  --from-env ENV   Source environment (default: all environments)
+  --env ENV        Target environment (default: keep source environment)
+  --environment ENV  Alias for --env
+  --to-env ENV     Alias for --env
 
 Examples:
   # Copy all variables from a project into the current repo
@@ -184,10 +308,10 @@ Examples:
   envault cp backend DATABASE_URL
 
   # Copy variables from a specific environment
-  envault cp backend --env local
+  envault cp backend --from-env local
 
   # Copy between environments
-  envault cp backend --env prod --to-env staging`);
+  envault cp backend --from-env prod --env staging`);
 }
 
 function showGetHelp(): void {
@@ -224,15 +348,20 @@ Examples:
 }
 
 function showSyncHelp(): void {
-  console.log(`envault sync - Sync variables from .env files to database
+  console.log(`envault sync - Sync variables between project and store
 
 Usage:
-  envault sync
+  envault sync [--from project|store]
 
 Description:
-  Discovers all .env* files in the git repository root and syncs them
-  to the database. The .env file takes precedence - it will overwrite
-  existing database values.
+  Default behavior is project → store: discovers all .env* files in the git
+  repository root and syncs them to the store (database).
+
+  With --from store, syncs store → project: writes .env* files from the store
+  into the repository root without modifying the store.
+
+Options:
+  --from <project|store>   Direction (default: project)
 
   File mapping:
     .env          → default environment
@@ -241,18 +370,24 @@ Description:
     .env.<name>   → <name> environment
 
 Examples:
-  # Sync all .env files to database
-  envault sync`);
+  # Import .env* into store (default)
+  envault sync
+
+  # Explicit import direction
+  envault sync --from project
+
+  # Export store into .env* files
+  envault sync --from store`);
 }
 
-function showRmHelp(): void {
-  console.log(`envault rm - Remove a variable
+function showUnsetHelp(): void {
+  console.log(`envault unset - Unset (remove) a variable
 
 Usage:
-  envault rm <KEY> [--env ENV]
+  envault unset <KEY> [--env ENV]
 
 Options:
-  --env ENV       Environment to remove from (default: default)
+  --env ENV       Environment to unset from (default: default)
 
 Description:
   Removes a variable from both the database and the .env file.
@@ -260,8 +395,8 @@ Description:
 
 Examples:
   # Remove variable from default environment
-  envault rm OLD_API_KEY
+  envault unset OLD_API_KEY
 
   # Remove from production environment
-  envault rm DEPRECATED_VAR --env prod`);
+  envault unset DEPRECATED_VAR --env prod`);
 }

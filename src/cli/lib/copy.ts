@@ -16,19 +16,23 @@ export async function copyFromProjectToCurrent(
   }
 ): Promise<void> {
   const key = opts.key;
-  const sourceEnvFlag = args.flags.env;
-  const targetEnvFlag = args.flags.toEnv;
-  const sourceEnvSpecified = sourceEnvFlag !== undefined;
-  const targetEnvSpecified = targetEnvFlag !== undefined;
+  // Flag semantics:
+  // - --from-env: source environment (copy/import only)
+  // - --env/--environment/--to-env: target environment (destination)
+  const sourceEnvFlag = args.flags.fromEnv;
+  const targetEnvFlag = args.flags.toEnv ?? args.flags.env;
+  const sourceEnvSpecified = args.flags.fromEnv !== undefined;
+  const targetEnvSpecified = args.flags.toEnv !== undefined || args.flags.env !== undefined;
   const sourceEnv = sourceEnvFlag ?? "default";
   const targetEnv = targetEnvFlag ?? "default";
   const confirmFn = opts.confirmFn ?? confirm;
 
-  // Validate arguments (kept consistent with `add -p` behavior)
+  // Validate arguments (kept consistent with `cp` behavior)
   if (!opts.copyAll && !key) {
     console.error("Error: Missing KEY argument\n");
-    console.error("Usage: envault add -p <project> <KEY>");
-    console.error("   or: envault add -all -p <project>");
+    console.error(
+      "Usage: envault cp <fromProject> <KEY> [--from-env ENV] [--env ENV|--environment ENV|--to-env ENV]"
+    );
     process.exit(1);
   }
 
@@ -144,14 +148,14 @@ export async function copyFromProjectToCurrent(
   } else {
     let resolvedSourceEnv = sourceEnv;
 
-    // If --env wasn't specified, try to auto-detect which env contains the key.
+    // If --from-env wasn't specified, try to auto-detect which env contains the key.
     if (!sourceEnvSpecified) {
       const all = db.listVariables(sourceProject.id);
       const matches = all.filter((v) => v.key === key);
 
       if (matches.length === 0) {
         console.error(`Error: Variable '${key}' not found in ${sourceProjectName}\n`);
-        console.error(`Use 'envault ls -p ${sourceProjectName}' to see available variables.`);
+        console.error(`Use 'envault ls --project ${sourceProjectName}' to see available variables.`);
         process.exit(1);
       }
 
@@ -160,7 +164,7 @@ export async function copyFromProjectToCurrent(
         console.error(
           `Error: Variable '${key}' exists in multiple environments in ${sourceProjectName}\n`
         );
-        console.error(`Specify which one with --env. Found in: ${envs.join(", ")}`);
+        console.error(`Specify which one with --from-env. Found in: ${envs.join(", ")}`);
         process.exit(1);
       }
 

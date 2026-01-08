@@ -4,17 +4,47 @@ import { requireGitRoot, getProjectName } from "../../utils/git.ts";
 import { parse } from "../../parser/dotenv.ts";
 import { join } from "node:path";
 import { readdir, readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { writeEnvFile } from "../lib/envfile.ts";
 
 export async function sync(args: ParsedArgs, db: EnvaultDB): Promise<void> {
-  // Get current project
   const gitRoot = requireGitRoot();
   const projectName = getProjectName(gitRoot);
 
-  // Ensure project exists in database
+  const from = args.flags.from ?? "project";
+
+  if (from !== "project" && from !== "store") {
+    console.error(`Error: Invalid value for --from: ${from}\n`);
+    console.error("Valid values: project, store");
+    process.exit(1);
+  }
+
+  if (from === "store") {
+    const project = db.findProjectByPath(gitRoot);
+    if (!project) {
+      console.error("Error: Project not tracked yet\n");
+      console.error("Run 'envault sync --from project' to import .env files into the store first.");
+      process.exit(1);
+    }
+
+    const environments = db.listEnvironments(project.id);
+    if (environments.length === 0) {
+      console.log(`No environments found in store for ${projectName}.`);
+      return;
+    }
+
+    console.log(`Syncing store → project for ${projectName}...`);
+    for (const environment of environments) {
+      await writeEnvFile(db, project.id, gitRoot, environment);
+      const fileName = environment === "default" ? ".env" : `.env.${environment}`;
+      console.log(`✓ Wrote ${fileName}`);
+    }
+    return;
+  }
+
+  // from === "project" (default): .env* → store
   const projectId = db.ensureProject(gitRoot, projectName);
 
-  console.log(`Syncing .env files for ${projectName}...`);
+  console.log(`Syncing project → store for ${projectName}...`);
 
   // Find all .env* files
   const envFiles = await findEnvFiles(gitRoot);

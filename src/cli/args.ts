@@ -6,8 +6,11 @@ export interface ParsedArgs {
     version?: boolean;
     json?: boolean;
     env?: string;
+    from?: string;
+    fromEnv?: string;
     toEnv?: string;
     project?: string;
+    value?: string;
     multiline?: boolean;
     strict?: boolean;
     all?: boolean;
@@ -116,10 +119,20 @@ function parseBooleanFlag(flags: ParsedArgs["flags"], name: string): void {
 function parseFlagWithValue(flags: ParsedArgs["flags"], name: string, value: string): void {
   switch (name) {
     case "env":
+    case "environment":
       flags.env = value;
+      break;
+    case "from":
+      flags.from = value;
+      break;
+    case "from-env":
+      flags.fromEnv = value;
       break;
     case "to-env":
       flags.toEnv = value;
+      break;
+    case "value":
+      flags.value = value;
       break;
     case "project":
     case "p":

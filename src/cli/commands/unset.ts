@@ -4,13 +4,13 @@ import { requireGitRoot, getProjectName } from "../../utils/git.ts";
 import { confirm } from "../../utils/input.ts";
 import { writeEnvFile } from "../lib/envfile.ts";
 
-export async function rm(args: ParsedArgs, db: EnvaultDB): Promise<void> {
+export async function unset(args: ParsedArgs, db: EnvaultDB): Promise<void> {
   const key = args.args[0];
   const environment = args.flags.env ?? "default";
 
   if (!key) {
     console.error("Error: Missing KEY argument\n");
-    console.error("Usage: envault rm <KEY> [--env ENV]");
+    console.error(`Usage: envault ${args.command || "unset"} <KEY> [--env ENV]`);
     process.exit(1);
   }
 
@@ -34,9 +34,9 @@ export async function rm(args: ParsedArgs, db: EnvaultDB): Promise<void> {
 
   // Confirm removal
   const envMsg = environment !== "default" ? ` (${environment})` : "";
-  const shouldRemove = await confirm(`Remove '${key}' from ${projectName}${envMsg}? (y/n): `);
+  const shouldUnset = await confirm(`Unset '${key}' from ${projectName}${envMsg}? (y/n): `);
 
-  if (!shouldRemove) {
+  if (!shouldUnset) {
     console.log("Aborted.");
     process.exit(1);
   }
@@ -45,12 +45,14 @@ export async function rm(args: ParsedArgs, db: EnvaultDB): Promise<void> {
   const deleted = db.deleteVariable(project.id, environment, key);
 
   if (!deleted) {
-    console.error(`Error: Failed to remove '${key}'`);
+    console.error(`Error: Failed to unset '${key}'`);
     process.exit(1);
   }
 
   // Update .env file
   await writeEnvFile(db, project.id, gitRoot, environment);
 
-  console.log(`✓ Removed ${key} from ${projectName}${envMsg}`);
+  console.log(`✓ Unset ${key} from ${projectName}${envMsg}`);
 }
+
+

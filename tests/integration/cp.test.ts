@@ -9,6 +9,7 @@ import { makeTempDir, makeGitRepo, withCwd } from "../helpers/setup.ts";
 
 function makeArgs(flags?: {
   env?: string;
+  fromEnv?: string;
   toEnv?: string;
   all?: boolean;
 }) {
@@ -133,6 +134,54 @@ test("cp: copy all variables (all environments by default)", async () => {
     const localEnvContent = await Bun.file(localEnvPath).text();
     const localParsed = parseDotenv(localEnvContent);
     expect(localParsed.variables.LOCAL_ONLY).toBe("yes");
+  } finally {
+    db.close();
+  }
+});
+
+test("cp: copy from a specific source env into a different target env", async () => {
+  const base = await makeTempDir();
+  const backendDir = join(base, "backend");
+  const frontendDir = join(base, "frontend");
+  await mkdir(backendDir, { recursive: true });
+  await mkdir(frontendDir, { recursive: true });
+  await makeGitRepo(backendDir);
+  await makeGitRepo(frontendDir);
+  const backend = await realpath(backendDir);
+  const frontend = await realpath(frontendDir);
+
+  const db = new EnvaultDB(join(base, "envault.db"));
+  try {
+    const sourceId = db.ensureProject(backend, "backend");
+    db.upsertVariable(sourceId, "prod", "DATABASE_URL", "postgres://prod:5432/app");
+    db.upsertVariable(sourceId, "staging", "DATABASE_URL", "postgres://staging:5432/app");
+
+    await withCwd(frontend, async () => {
+      await copyFromProjectToCurrent(
+        makeArgs({ fromEnv: "prod", env: "staging" }),
+        db,
+        "backend",
+        {
+          key: "DATABASE_URL",
+          copyAll: false,
+          confirmFn: async () => true,
+        }
+      );
+    });
+
+    const targetProject = db.findProjectByPath(frontend)!;
+    expect(db.getVariable(targetProject.id, "staging", "DATABASE_URL")).toBe(
+      "postgres://prod:5432/app"
+    );
+
+    const stagingEnvPath = join(frontend, getEnvFileName("staging"));
+    const stagingEnvContent = await Bun.file(stagingEnvPath).text();
+    const stagingParsed = parseDotenv(stagingEnvContent);
+    expect(stagingParsed.variables.DATABASE_URL).toBe("postgres://prod:5432/app");
+
+    // Ensure we didn't accidentally write it into default env
+    const defaultEnvPath = join(frontend, getEnvFileName("default"));
+    expect(await Bun.file(defaultEnvPath).exists()).toBe(false);
   } finally {
     db.close();
   }

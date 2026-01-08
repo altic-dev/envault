@@ -1,9 +1,12 @@
 import { mkdir, mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 export async function makeTempDir(prefix: string = "envault-test-"): Promise<string> {
-  return await mkdtemp(join(tmpdir(), prefix));
+  // Tests run in a sandbox that may not allow writing to OS temp directories.
+  // Keep temp test data inside the workspace to avoid EPERM failures.
+  const base = join(process.cwd(), ".tmp-tests");
+  await mkdir(base, { recursive: true });
+  return await mkdtemp(join(base, prefix));
 }
 
 export async function makeGitRepo(dir: string): Promise<void> {

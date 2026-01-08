@@ -4,19 +4,14 @@ import { requireGitRoot, getProjectName } from "../../utils/git.ts";
 import { promptHidden, promptMultiline, confirm } from "../../utils/input.ts";
 import { partialValue } from "../../utils/partial.ts";
 import { writeEnvFile } from "../lib/envfile.ts";
-import { copyFromProjectToCurrent } from "../lib/copy.ts";
 
 export async function add(args: ParsedArgs, db: EnvaultDB): Promise<void> {
-  const sourceProject = args.flags.project;
-  const copyAll = args.flags.all ?? false;
-
-  // Cross-project copy mode
-  if (sourceProject) {
-    await copyFromProjectToCurrent(args, db, sourceProject, {
-      key: args.args[0],
-      copyAll,
-    });
-    return;
+  // `add` is strictly for setting/updating variables in the current project.
+  // Cross-project copy is handled by `envault cp`.
+  if (args.flags.project || args.flags.all || args.flags.toEnv || args.flags.fromEnv) {
+    console.error("Error: 'envault add' only sets/updates variables in the current project.\n");
+    console.error("Use: envault cp <fromProject> [KEY] [--from-env ENV] [--to-env ENV]");
+    process.exit(1);
   }
 
   // Regular add mode

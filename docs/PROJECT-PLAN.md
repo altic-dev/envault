@@ -76,7 +76,7 @@
    {"name": "frontend", "path": "/Users/user/work/frontend"}
  ]
 
- envault ls -p <project>
+envault ls --project <project>
 
  List variables in a project (all environments by default).
 
@@ -98,7 +98,7 @@
  - Values < 12 chars: Show first 4 + ... + last 4 (may overlap in middle)
  - Empty values: Show (empty)
 
- Filter by environment: envault ls -p <project> --env dev
+Filter by environment: envault ls --project <project> --env dev
 
  Output (with --json):
  {
@@ -153,29 +153,29 @@
  8. Success message: ✓ Added KEY to <project> (<environment>)
 
  ---
- 3. envault add -p <project> <KEY>
+3. envault add --project <project> <KEY>
 
  Copy variable(s) from another project to current project.
 
  Syntax:
- envault add -p <project> <KEY> [--env SOURCE_ENV] [--to-env TARGET_ENV]
- envault add -all -p <project> [--env SOURCE_ENV] [--to-env TARGET_ENV]
+envault add --project <project> <KEY> [--from-env SOURCE_ENV] [--env TARGET_ENV]
+envault add -all --project <project> [--from-env SOURCE_ENV] [--env TARGET_ENV]
 
  Examples:
  # Copy specific key from another project (default env)
- envault add -p my-api DATABASE_URL
+envault add --project my-api DATABASE_URL
 
  # Copy from specific source environment
- envault add -p my-api DATABASE_URL --env prod
+envault add --project my-api DATABASE_URL --from-env prod
 
  # Copy to specific target environment
- envault add -p my-api DATABASE_URL --to-env staging
+envault add --project my-api DATABASE_URL --env staging
 
  # Copy all variables
- envault add -all -p my-api
+envault add -all --project my-api
 
  # Copy all from prod to local staging
- envault add -all -p my-api --env prod --to-env staging
+envault add -all --project my-api --from-env prod --env staging
 
  Project Resolution:
  - If <project> matches multiple projects by name:
@@ -263,16 +263,16 @@
 
  Total: 16 variables synced to database
 
- ---
- 7. envault rm <KEY>
+---
+7. envault unset <KEY>
 
  Remove variable from database and .env file.
 
  Syntax:
- envault rm <KEY> [--env ENV]
+envault unset <KEY> [--env ENV]
 
  Confirmation prompt:
- Remove 'DATABASE_URL' from my-app (default)? (y/n):
+Unset 'DATABASE_URL' from my-app (default)? (y/n):
 
  Behavior:
  1. If y: Delete from database + remove from .env file
@@ -281,7 +281,7 @@
  Environment: Default to default, or specify with --env
 
  Output:
- ✓ Removed DATABASE_URL from my-app (default)
+✓ Unset DATABASE_URL from my-app (default)
 
  Error:
  - Key not found: Show error, exit code 1
@@ -403,8 +403,8 @@
  - --version - Show version
  - --json - Output in JSON format (where applicable)
 
- Command-specific flags:
- - -p <project> - Project name or path (for cross-project operations)
+Command-specific flags:
+- --project <project> - Project name or path (alias: -p)
  - --env <name> - Target environment
  - --to-env <name> - Destination environment (for cross-project copy)
  - --multiline - Enable multiline input mode
@@ -644,7 +644,7 @@
    get             Retrieve the full value of a variable
    update          Update an existing variable (alias for add)
    sync            Sync variables from .env files to database
-   rm              Remove a variable
+  unset           Unset (remove) a variable
    help            Show help for a command
 
  Global Options:
@@ -654,7 +654,7 @@
 
  Examples:
    envault ls                      # List all projects
-   envault ls -p my-app            # List variables in my-app
+  envault ls --project my-app      # List variables in my-app
    envault add DATABASE_URL        # Add variable interactively
    envault get DATABASE_URL        # Get full value
    envault sync                    # Sync from .env files
@@ -673,16 +673,16 @@
 
  Usage:
    envault add <KEY> [value] [options]
-   envault add -p <project> <KEY> [options]
-   envault add -all -p <project> [options]
+  envault add --project <project> <KEY> [options]
+  envault add -all --project <project> [options]
 
  Options:
    --env ENV           Target environment (default: default)
                        Writes to .env.ENV file
    --multiline         Enable multiline value input
                        End input with Ctrl+D
-   -p <project>        Copy variable from another project
-   -all                Copy all variables (used with -p)
+  --project <project>  Copy variable from another project (alias: -p)
+  -all                 Copy all variables (used with --project)
    --to-env ENV        Target environment for cross-project copy
 
  Examples:
@@ -699,13 +699,13 @@
    envault add SSL_CERT --multiline
 
    # Copy from another project
-   envault add -p my-api DATABASE_URL
+  envault add --project my-api DATABASE_URL
 
    # Copy all variables from prod environment
-   envault add -all -p my-api --env prod
+  envault add -all --project my-api --env prod
 
    # Copy to staging environment
-   envault add -p backend DATABASE_URL --to-env staging
+  envault add --project backend DATABASE_URL --to-env staging
 
  ---
  Package Configuration
@@ -1012,7 +1012,7 @@
  Phase 7: Remove Command
 
  Files to create:
- - src/cli/commands/rm.ts - Remove with confirmation
+- src/cli/commands/unset.ts - Unset (remove) with confirmation
 
  Tests: Integration test for rm
 
@@ -1158,8 +1158,8 @@
  3. ✅ User can run envault get KEY and see full value
  4. ✅ User can run envault sync and .env syncs to DB
  5. ✅ User can use --env flag for multiple environments
- 6. ✅ User can copy variables between projects with -p
- 7. ✅ User can remove variables with envault rm KEY
+6. ✅ User can copy variables between projects with --project (alias: -p)
+7. ✅ User can remove variables with envault unset KEY
  8. ✅ All commands have --help documentation
  9. ✅ JSON output mode works for ls and get
  10. ✅ Interactive prompts work (hidden, multiline)

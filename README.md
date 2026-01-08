@@ -51,7 +51,7 @@ envault add DATABASE_URL
 envault add DEBUG true
 
 # List all variables
-envault ls -p my-project
+envault ls --project my-project
 
 # Get a specific value
 envault get DATABASE_URL
@@ -71,13 +71,13 @@ List all tracked projects or variables in a project.
 envault ls
 
 # List variables in current project
-envault ls -p my-app
+envault ls --project my-app
 
 # List variables in specific environment
-envault ls -p my-app --env prod
+envault ls --project my-app --env prod
 
 # Output as JSON
-envault ls -p my-app --json
+envault ls --project my-app --json
 ```
 
 ### `envault add`
@@ -96,21 +96,11 @@ envault add DATABASE_URL --env prod
 
 # Multiline value (e.g., certificates)
 envault add SSL_CERT --multiline
-
-# Copy from another project
-envault add -p backend DATABASE_URL
-
-# Copy all variables from another project
-envault add -all -p backend --env prod
-
-# Copy to different environment
-envault add -p api DATABASE_URL --env prod --to-env staging
 ```
 
 ### `envault cp`
 
 Copy variables from a source project (tracked in Envault) into the current git repo.
-This is a convenience wrapper around the existing cross-project copy flow in `envault add -p`.
 
 ```bash
 # Copy all variables from a project into the current repo
@@ -119,8 +109,11 @@ envault cp backend
 # Copy a single variable into the current repo
 envault cp backend DATABASE_URL
 
+# Copy from a specific source environment
+envault cp backend --from-env prod
+
 # Copy between environments
-envault cp backend --env prod --to-env staging
+envault cp backend --from-env prod --env staging
 ```
 
 ### `envault get`
@@ -140,11 +133,14 @@ export DB=$(envault get DATABASE_URL)
 
 ### `envault sync`
 
-Sync variables from .env files to the database.
+Sync variables between your project (`.env*` files) and the store (database).
 
 ```bash
-# Sync all .env* files in current project
+# Sync project → store (default)
 envault sync
+
+# Sync store → project (write .env* files from database)
+envault sync --from store
 ```
 
 File mapping:
@@ -153,17 +149,18 @@ File mapping:
 - `.env.prod` → `prod` environment
 - `.env.<custom>` → `<custom>` environment
 
-### `envault rm`
+### `envault unset`
 
-Remove a variable (with confirmation).
+Unset (remove) a variable (with confirmation).
 
 ```bash
 # Remove from default environment
-envault rm OLD_VAR
+envault unset OLD_VAR
 
 # Remove from specific environment
-envault rm DEPRECATED --env prod
+envault unset DEPRECATED --env prod
 ```
+
 
 ### `envault help`
 
@@ -206,7 +203,7 @@ envault add DATABASE_URL --env dev
 envault add DEBUG true --env dev
 
 # List all environments
-envault ls -p my-app
+envault ls --project my-app
 ```
 
 ### Copying variables between projects
@@ -214,21 +211,21 @@ envault ls -p my-app
 ```bash
 cd my-frontend
 # Copy DATABASE_URL from backend project
-envault add -p backend DATABASE_URL
+envault cp backend DATABASE_URL
 
 # Copy all prod variables to local staging
-envault add -all -p backend --env prod --to-env staging
+envault cp backend --from-env prod --env staging
 ```
 
 ### Migrating existing .env files
 
 ```bash
 cd existing-project
-# Envault will read your existing .env files
-envault sync
+# Import your existing .env files into the store
+envault sync --from project
 
 # Now managed by envault
-envault ls -p existing-project
+envault ls --project existing-project
 ```
 
 ## How It Works
