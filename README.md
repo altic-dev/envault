@@ -19,19 +19,19 @@ Envault is a CLI tool that helps you manage environment variables across multipl
 ### Using Bun (recommended)
 
 ```bash
-bun install -g envault
+bun install -g envault-manager
 ```
 
 ### Using npm
 
 ```bash
-npm install -g envault
+npm install -g envault-manager
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/you/envault.git
+git clone https://github.com/altic-dev/envault.git
 cd envault
 bun install
 bun run build
@@ -260,7 +260,7 @@ For true secrets management, use tools like HashiCorp Vault, AWS Secrets Manager
 
 ```bash
 # Clone repository
-git clone https://github.com/you/envault.git
+git clone https://github.com/altic-dev/envault.git
 cd envault
 
 # Install dependencies

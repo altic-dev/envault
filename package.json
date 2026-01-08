@@ -1,5 +1,5 @@
 {
-  "name": "envault",
+  "name": "envault-manager",
   "version": "0.1.0",
   "description": "Centralized environment variable management CLI",
   "type": "module",
