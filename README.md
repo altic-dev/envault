@@ -45,22 +45,99 @@ bun link
 cd /path/to/your/project
 
 # Add a variable (interactive mode - recommended for secrets)
-envault add DATABASE_URL
+envault var set DATABASE_URL
 
 # Add with inline value (appears in shell history)
-envault add DEBUG true
+envault var set DEBUG true
 
-# List all variables
-envault ls --project my-project
+# List all variables in the current repo
+envault var list
 
 # Get a specific value
-envault get DATABASE_URL
+envault var get DATABASE_URL
 
 # Sync existing .env files to database
 envault sync
 ```
 
 ## Commands
+
+Envault supports two command styles:
+
+- **Preferred (noun + verb)**: `project`, `env`, `var`
+- **Legacy (single verb)**: `ls`, `envs`, `add`, `get`, `unset`, `update`
+
+Both styles operate on the same underlying data and files.
+
+### `envault project`
+
+List tracked projects in the store.
+
+```bash
+# List all projects
+envault project list
+
+# Output as JSON
+envault project list --json
+```
+
+### `envault env`
+
+List environments for the current repo (default) or a tracked project.
+
+```bash
+# List environments for current repo
+envault env list
+
+# List environments for a tracked project by name
+envault env list --project my-app
+
+# Alias for --project
+envault env list -p my-app
+
+# Output as JSON
+envault env list --json
+```
+
+### `envault var`
+
+Manage variables for the current repo (default) or a tracked project.
+
+```bash
+# List variables for current repo
+envault var list
+
+# List variables for a tracked project
+envault var list --project my-app
+
+# Filter by environment
+envault var list --env prod
+
+# Output as JSON
+envault var list --json
+
+# Get a specific value (prints plaintext to stdout)
+envault var get DATABASE_URL
+
+# Set interactively (hidden input)
+envault var set API_KEY
+
+# Set with inline value (WARNING: appears in shell history)
+envault var set DEBUG true
+
+# Set with non-interactive flag (quote if it contains spaces)
+envault var set API_KEY --value "secret"
+
+# Multiline value (Ctrl+D to finish)
+envault var set SSL_CERT --multiline
+
+# Unset (remove) a variable (with confirmation)
+envault var unset OLD_VAR
+```
+
+### Legacy commands (aliases / compatibility)
+
+These are still available, but `envault project/env/var` are recommended for new usage.
 
 ### `envault ls`
 
@@ -70,7 +147,7 @@ List all tracked projects or variables in a project.
 # List all projects
 envault ls
 
-# List variables in current project
+# List variables in a tracked project (by name)
 envault ls --project my-app
 
 # List variables in specific environment
@@ -78,6 +155,21 @@ envault ls --project my-app --env prod
 
 # Output as JSON
 envault ls --project my-app --json
+```
+
+### `envault envs`
+
+List environments for the current repo (default) or a tracked project.
+
+```bash
+# List environments for current repo
+envault envs
+
+# List environments for a tracked project
+envault envs --project my-app
+
+# Output as JSON
+envault envs --json
 ```
 
 ### `envault add`
@@ -136,8 +228,11 @@ export DB=$(envault get DATABASE_URL)
 Sync variables between your project (`.env*` files) and the store (database).
 
 ```bash
-# Sync project → store (default)
+# Sync project → store (default): discover .env* and import into the store
 envault sync
+
+# Explicit import direction
+envault sync --from project
 
 # Sync store → project (write .env* files from database)
 envault sync --from store
@@ -183,9 +278,9 @@ cd my-new-project
 git init
 
 # Add variables interactively
-envault add DATABASE_URL
-envault add API_KEY
-envault add JWT_SECRET
+envault var set DATABASE_URL
+envault var set API_KEY
+envault var set JWT_SECRET
 
 # Variables are now in both database and .env file
 cat .env
@@ -203,7 +298,7 @@ envault add DATABASE_URL --env dev
 envault add DEBUG true --env dev
 
 # List all environments
-envault ls --project my-app
+envault env list
 ```
 
 ### Copying variables between projects
@@ -225,7 +320,7 @@ cd existing-project
 envault sync --from project
 
 # Now managed by envault
-envault ls --project existing-project
+envault var list
 ```
 
 ## How It Works
