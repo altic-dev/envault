@@ -226,5 +226,5 @@ Examples:
   envault sync
 
   # Import .env* into store
-  envault sync --from project
+  envault sync --from project`);
 }
