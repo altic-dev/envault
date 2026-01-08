@@ -20,8 +20,7 @@
         "configuration",
         "dotenv"
       ],
-      "strict": false,
-      "skills": ["./skills/envault-manager"]
+      "strict": false
     }
   ]
 }
