@@ -6,32 +6,36 @@ export async function promptHidden(message: string): Promise<string> {
     const stdin = process.stdin;
     let input = "";
 
+    const cleanup = (opts?: { newline?: boolean }) => {
+      if (stdin.isTTY && stdin.setRawMode) {
+        stdin.setRawMode(false);
+      }
+      stdin.pause();
+      if (opts?.newline) process.stdout.write("\n");
+    };
+
     // Try to disable echo
     if (stdin.isTTY && stdin.setRawMode) {
       stdin.setRawMode(true);
     }
 
-    stdin.on("data", (chunk) => {
+    stdin.resume();
+
+    const handleData = (chunk: Buffer) => {
       const char = chunk.toString();
 
       // Handle Enter (newline)
       if (char === "\n" || char === "\r" || char === "\r\n") {
-        if (stdin.isTTY && stdin.setRawMode) {
-          stdin.setRawMode(false);
-        }
-        stdin.removeAllListeners("data");
-        process.stdout.write("\n");
+        stdin.off("data", handleData);
+        cleanup({ newline: true });
         resolve(input);
         return;
       }
 
       // Handle Ctrl+C
       if (char === "\u0003") {
-        if (stdin.isTTY && stdin.setRawMode) {
-          stdin.setRawMode(false);
-        }
-        stdin.removeAllListeners("data");
-        process.stdout.write("\n");
+        stdin.off("data", handleData);
+        cleanup({ newline: true });
         process.exit(1);
       }
 
@@ -45,7 +49,9 @@ export async function promptHidden(message: string): Promise<string> {
 
       // Add character to input (don't echo it)
       input += char;
-    });
+    };
+
+    stdin.on("data", handleData);
   });
 
   return password;
@@ -69,13 +75,19 @@ export async function confirm(message: string): Promise<boolean> {
   const answer = await new Promise<string>((resolve) => {
     const stdin = process.stdin;
 
-    const handleData = (chunk: Buffer) => {
-      const input = chunk.toString().trim().toLowerCase();
-      stdin.removeListener("data", handleData);
-      resolve(input);
-    };
+    stdin.resume();
+    stdin.once("data", (chunk: Buffer) => {
+      const raw = chunk.toString();
+      // Ctrl+C
+      if (raw.includes("\u0003")) {
+        stdin.pause();
+        process.stdout.write("\n");
+        process.exit(1);
+      }
 
-    stdin.on("data", handleData);
+      stdin.pause();
+      resolve(raw.trim().toLowerCase());
+    });
   });
 
   return answer === "y" || answer === "yes";
