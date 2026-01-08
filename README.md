@@ -276,10 +276,6 @@ bun run build
 bun test
 ```
 
-## License
-
-MIT
-
 ## Contributing
 
 Contributions welcome! Please open an issue or PR.
