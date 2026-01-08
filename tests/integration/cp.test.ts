@@ -14,7 +14,7 @@ function makeArgs(flags?: {
   all?: boolean;
 }) {
   return {
-    command: "cp",
+    command: "var",
     args: [],
     flags: flags ?? {},
   };

@@ -3,13 +3,13 @@ import { mkdir, realpath } from "node:fs/promises";
 import { join } from "node:path";
 
 import { EnvaultDB } from "../../src/db/index.ts";
-import { envs } from "../../src/cli/commands/envs.ts";
+import { env } from "../../src/cli/commands/env.ts";
 import { makeTempDir, makeGitRepo, withCwd } from "../helpers/setup.ts";
 
 function makeArgs(flags?: { project?: string; json?: boolean }) {
   return {
-    command: "envs",
-    args: [],
+    command: "env",
+    args: ["list"],
     flags: flags ?? {},
   };
 }
@@ -46,7 +46,7 @@ test("envs: lists envs for current repo", async () => {
 
     const logs = await withCwd(repo, async () => {
       return await captureConsoleLog(async () => {
-        await envs(makeArgs(), db);
+        await env(makeArgs(), db);
       });
     });
 
@@ -69,7 +69,7 @@ test("envs: lists envs for named project", async () => {
     db.upsertVariable(backendId, "dev", "X", "y");
 
     const logs = await captureConsoleLog(async () => {
-      await envs(makeArgs({ project: "backend" }), db);
+      await env(makeArgs({ project: "backend" }), db);
     });
 
     expect(logs[0]).toBe("dev");
@@ -94,7 +94,7 @@ test("envs: json output", async () => {
 
     const logs = await withCwd(repo, async () => {
       return await captureConsoleLog(async () => {
-        await envs(makeArgs({ json: true }), db);
+        await env(makeArgs({ json: true }), db);
       });
     });
 

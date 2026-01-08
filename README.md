@@ -62,12 +62,7 @@ envault sync
 
 ## Commands
 
-Envault supports two command styles:
-
-- **Preferred (noun + verb)**: `project`, `env`, `var`
-- **Legacy (single verb)**: `ls`, `envs`, `add`, `get`, `unset`, `update`
-
-Both styles operate on the same underlying data and files.
+Envault uses a **noun + verb** interface optimized for both humans and AI agents.
 
 ### `envault project`
 
@@ -133,94 +128,10 @@ envault var set SSL_CERT --multiline
 
 # Unset (remove) a variable (with confirmation)
 envault var unset OLD_VAR
-```
 
-### Legacy commands (aliases / compatibility)
-
-These are still available, but `envault project/env/var` are recommended for new usage.
-
-### `envault ls`
-
-List all tracked projects or variables in a project.
-
-```bash
-# List all projects
-envault ls
-
-# List variables in a tracked project (by name)
-envault ls --project my-app
-
-# List variables in specific environment
-envault ls --project my-app --env prod
-
-# Output as JSON
-envault ls --project my-app --json
-```
-
-### `envault envs`
-
-List environments for the current repo (default) or a tracked project.
-
-```bash
-# List environments for current repo
-envault envs
-
-# List environments for a tracked project
-envault envs --project my-app
-
-# Output as JSON
-envault envs --json
-```
-
-### `envault add`
-
-Add or update environment variables.
-
-```bash
-# Interactive mode (hidden input)
-envault add API_KEY
-
-# Inline value (WARNING: appears in shell history)
-envault add DEBUG true
-
-# Add to specific environment
-envault add DATABASE_URL --env prod
-
-# Multiline value (e.g., certificates)
-envault add SSL_CERT --multiline
-```
-
-### `envault cp`
-
-Copy variables from a source project (tracked in Envault) into the current git repo.
-
-```bash
-# Copy all variables from a project into the current repo
-envault cp backend
-
-# Copy a single variable into the current repo
-envault cp backend DATABASE_URL
-
-# Copy from a specific source environment
-envault cp backend --from-env prod
-
-# Copy between environments
-envault cp backend --from-env prod --env staging
-```
-
-### `envault get`
-
-Retrieve the full plaintext value of a variable.
-
-```bash
-# Get variable from default environment
-envault get DATABASE_URL
-
-# Get from specific environment
-envault get API_KEY --env prod
-
-# Use in scripts
-export DB=$(envault get DATABASE_URL)
+# Copy variables from another tracked project into the current repo
+envault var copy backend
+envault var copy backend DATABASE_URL --from-env prod --env staging
 ```
 
 ### `envault sync`
@@ -244,18 +155,6 @@ File mapping:
 - `.env.prod` → `prod` environment
 - `.env.<custom>` → `<custom>` environment
 
-### `envault unset`
-
-Unset (remove) a variable (with confirmation).
-
-```bash
-# Remove from default environment
-envault unset OLD_VAR
-
-# Remove from specific environment
-envault unset DEPRECATED --env prod
-```
-
 
 ### `envault help`
 
@@ -266,7 +165,7 @@ Get help for any command.
 envault --help
 
 # Command-specific help
-envault help add
+envault help var set
 ```
 
 ## Workflow Examples
@@ -290,12 +189,12 @@ cat .env
 
 ```bash
 # Add production variables
-envault add DATABASE_URL --env prod
-envault add API_KEY --env prod
+envault var set DATABASE_URL --env prod
+envault var set API_KEY --env prod
 
 # Add development variables
-envault add DATABASE_URL --env dev
-envault add DEBUG true --env dev
+envault var set DATABASE_URL --env dev
+envault var set DEBUG true --env dev
 
 # List all environments
 envault env list
@@ -306,10 +205,10 @@ envault env list
 ```bash
 cd my-frontend
 # Copy DATABASE_URL from backend project
-envault cp backend DATABASE_URL
+envault var copy backend DATABASE_URL
 
 # Copy all prod variables to local staging
-envault cp backend --from-env prod --env staging
+envault var copy backend --from-env prod --env staging
 ```
 
 ### Migrating existing .env files

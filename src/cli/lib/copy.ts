@@ -31,7 +31,7 @@ export async function copyFromProjectToCurrent(
   if (!opts.copyAll && !key) {
     console.error("Error: Missing KEY argument\n");
     console.error(
-      "Usage: envault cp <fromProject> <KEY> [--from-env ENV] [--env ENV|--environment ENV|--to-env ENV]"
+      "Usage: envault var copy <fromProject> <KEY> [--from-env ENV] [--env ENV|--environment ENV|--to-env ENV]"
     );
     process.exit(1);
   }
@@ -55,7 +55,7 @@ export async function copyFromProjectToCurrent(
     } else {
       console.error("  (no projects tracked yet)");
     }
-    console.error("\nUse 'envault ls' to see all projects.");
+    console.error("\nUse 'envault project list' to see all projects.");
     process.exit(1);
   }
 
@@ -155,7 +155,9 @@ export async function copyFromProjectToCurrent(
 
       if (matches.length === 0) {
         console.error(`Error: Variable '${key}' not found in ${sourceProjectName}\n`);
-        console.error(`Use 'envault ls --project ${sourceProjectName}' to see available variables.`);
+        console.error(
+          `Use 'envault var list --project ${sourceProjectName}' to see available variables.`
+        );
         process.exit(1);
       }
 

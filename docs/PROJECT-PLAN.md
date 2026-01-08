@@ -61,7 +61,7 @@
 
  Commands Specification
 
- 1. envault ls
+ 1. envault project list
 
  Without project flag: List all tracked projects
 
@@ -76,7 +76,7 @@
    {"name": "frontend", "path": "/Users/user/work/frontend"}
  ]
 
-envault ls --project <project>
+envault var list --project <project>
 
  List variables in a project (all environments by default).
 
@@ -98,7 +98,7 @@ envault ls --project <project>
  - Values < 12 chars: Show first 4 + ... + last 4 (may overlap in middle)
  - Empty values: Show (empty)
 
-Filter by environment: envault ls --project <project> --env dev
+Filter by environment: envault var list --project <project> --env dev
 
  Output (with --json):
  {
@@ -112,12 +112,12 @@ Filter by environment: envault ls --project <project> --env dev
  }
 
  ---
- 2. envault add <KEY> [value]
+ 2. envault var set <KEY> [value]
 
  Add or update an environment variable.
 
  Syntax:
- envault add KEY [value] [--env ENV] [--multiline]
+ envault var set KEY [value] [--env ENV] [--value VALUE] [--multiline]
 
  Value Input:
  1. If value provided as arg: Use directly
@@ -127,7 +127,7 @@ Filter by environment: envault ls --project <project> --env dev
  3. Empty values: Allowed (store as empty string)
 
  Multiline support: With --multiline flag only
- envault add SSL_CERT --multiline
+ envault var set SSL_CERT --multiline
  Prompts: Enter value for SSL_CERT (Ctrl+D to finish):
 
  Environment: --env <name> (default: default)
@@ -153,29 +153,28 @@ Filter by environment: envault ls --project <project> --env dev
  8. Success message: ✓ Added KEY to <project> (<environment>)
 
  ---
-3. envault add --project <project> <KEY>
+3. envault var copy <fromProject> [KEY]
 
  Copy variable(s) from another project to current project.
 
  Syntax:
-envault add --project <project> <KEY> [--from-env SOURCE_ENV] [--env TARGET_ENV]
-envault add -all --project <project> [--from-env SOURCE_ENV] [--env TARGET_ENV]
+envault var copy <fromProject> [KEY] [--from-env SOURCE_ENV] [--env TARGET_ENV]
 
  Examples:
  # Copy specific key from another project (default env)
-envault add --project my-api DATABASE_URL
+envault var copy my-api DATABASE_URL
 
  # Copy from specific source environment
-envault add --project my-api DATABASE_URL --from-env prod
+envault var copy my-api DATABASE_URL --from-env prod
 
  # Copy to specific target environment
-envault add --project my-api DATABASE_URL --env staging
+envault var copy my-api DATABASE_URL --env staging
 
  # Copy all variables
-envault add -all --project my-api
+envault var copy my-api
 
  # Copy all from prod to local staging
-envault add -all --project my-api --from-env prod --env staging
+envault var copy my-api --from-env prod --env staging
 
  Project Resolution:
  - If <project> matches multiple projects by name:
@@ -196,25 +195,23 @@ envault add -all --project my-api --from-env prod --env staging
  - If key already exists: Use same duplicate prompt as regular add
 
  ---
- 4. envault update <KEY> [value]
+ 4. envault var set <KEY> [value]
 
- Alias for add command. Semantically indicates updating existing value.
-
- Implementation: Same function as add (upsert logic).
+ Update is handled by the same upsert logic as `envault var set`.
 
  ---
- 5. envault get <KEY>
+ 5. envault var get <KEY>
 
  Retrieve the full plaintext value of a variable.
 
  Syntax:
- envault get <KEY> [--env ENV]
+ envault var get <KEY> [--env ENV]
 
  Output: Plain value to stdout (for piping)
- $ envault get DATABASE_URL
+ $ envault var get DATABASE_URL
  postgresql://user:pass@localhost:5432/db
 
- $ export DB=$(envault get DATABASE_URL)
+ $ export DB=$(envault var get DATABASE_URL)
 
  Environment: Default to default, or specify with --env
 
@@ -264,12 +261,12 @@ envault add -all --project my-api --from-env prod --env staging
  Total: 16 variables synced to database
 
 ---
-7. envault unset <KEY>
+7. envault var unset <KEY>
 
  Remove variable from database and .env file.
 
  Syntax:
-envault unset <KEY> [--env ENV]
+envault var unset <KEY> [--env ENV]
 
  Confirmation prompt:
 Unset 'DATABASE_URL' from my-app (default)? (y/n):
@@ -600,7 +597,7 @@ Command-specific flags:
  Variable not found:
  Error: Variable 'API_KEY' not found in my-app (default)
 
- Use 'envault add API_KEY' to create it.
+Use 'envault var set API_KEY' to create it.
 
  Project not found:
  Error: Project 'xyz' not found
@@ -609,7 +606,7 @@ Command-specific flags:
    my-app (/Users/user/projects/my-app)
    frontend (/Users/user/work/frontend)
 
- Use 'envault ls' to see all projects.
+Use 'envault project list' to see all projects.
 
  Multiple projects with same name:
  Multiple projects named 'my-app' found:
@@ -639,13 +636,15 @@ Command-specific flags:
    envault <command> [options]
 
  Commands:
-   ls              List all projects or variables in a project
-   add             Add or update an environment variable
-   get             Retrieve the full value of a variable
-   update          Update an existing variable (alias for add)
-   sync            Sync variables from .env files to database
-  unset           Unset (remove) a variable
-   help            Show help for a command
+   project list     List all tracked projects
+   env list         List environments (current repo, or use --project)
+   var list         List variables (current repo, or use --project)
+   var get          Retrieve the full value of a variable
+   var set          Add or update an environment variable
+   var unset        Unset (remove) a variable
+   var copy         Copy variables from another tracked project into the current repo
+   sync             Sync between project files and the store (db)
+   help             Show help for a command
 
  Global Options:
    --help          Show this help message
@@ -653,11 +652,14 @@ Command-specific flags:
    --json          Output in JSON format (where applicable)
 
  Examples:
-   envault ls                      # List all projects
-  envault ls --project my-app      # List variables in my-app
-   envault add DATABASE_URL        # Add variable interactively
-   envault get DATABASE_URL        # Get full value
-   envault sync                    # Sync from .env files
+   envault project list             # List all projects
+   envault env list                 # List envs for current repo
+   envault var list                 # List vars for current repo
+   envault var get DATABASE_URL      # Get full value
+   envault var set API_KEY           # Set interactively
+   envault var unset API_KEY         # Unset (with confirmation)
+   envault var copy backend          # Copy vars from backend into current repo
+   envault sync                      # Sync from .env files
 
  For command-specific help:
    envault <command> --help
@@ -667,45 +669,40 @@ Command-specific flags:
  ---
  Command Help
 
- Example: envault add --help
+ Example: envault var set --help
 
- envault add - Add or update an environment variable
+ envault var set - Add or update an environment variable
 
  Usage:
-   envault add <KEY> [value] [options]
-  envault add --project <project> <KEY> [options]
-  envault add -all --project <project> [options]
+   envault var set <KEY> [value] [options]
 
  Options:
    --env ENV           Target environment (default: default)
-                       Writes to .env.ENV file
-   --multiline         Enable multiline value input
-                       End input with Ctrl+D
-  --project <project>  Copy variable from another project (alias: -p)
-  -all                 Copy all variables (used with --project)
-   --to-env ENV        Target environment for cross-project copy
+                       Writes to .env.<env> file (or .env for default)
+   --value VALUE       Provide a value non-interactively (quote if it contains spaces)
+   --multiline         Enable multiline value input (Ctrl+D to finish)
 
  Examples:
    # Add variable interactively (recommended for secrets)
-   envault add DATABASE_URL
+   envault var set DATABASE_URL
 
    # Add variable inline (WARNING: appears in shell history)
-   envault add DEBUG true
+   envault var set DEBUG true
 
    # Add to production environment
-   envault add API_KEY --env prod
+   envault var set API_KEY --env prod
 
    # Multiline value (certificate, JSON, etc.)
-   envault add SSL_CERT --multiline
+   envault var set SSL_CERT --multiline
 
    # Copy from another project
-  envault add --project my-api DATABASE_URL
+  envault var copy my-api DATABASE_URL
 
-   # Copy all variables from prod environment
-  envault add -all --project my-api --env prod
+   # Copy all variables from prod environment to staging
+  envault var copy my-api --from-env prod --env staging
 
    # Copy to staging environment
-  envault add --project backend DATABASE_URL --to-env staging
+  envault var copy backend DATABASE_URL --env staging
 
  ---
  Package Configuration
@@ -790,7 +787,7 @@ Command-specific flags:
  bun install -g envault
 
  # Or use via bunx (no install)
- bunx envault ls
+ bunx envault project list
 
  Building
 
@@ -890,8 +887,8 @@ Command-specific flags:
  test("add variable writes to database and .env", async () => {
    const repo = await createGitRepo("my-app")
 
-   // Run envault add
-   const result = await $`bun src/cli/index.ts add TEST_KEY test_value`.cwd(repo)
+  // Run envault var set
+  const result = await $`bun src/cli/index.ts var set TEST_KEY test_value`.cwd(repo)
    expect(result.exitCode).toBe(0)
 
    // Check .env file
@@ -908,7 +905,7 @@ Command-specific flags:
  MVP Scope
 
  Included in MVP:
- 1. ✅ Core commands: ls, add, get, update, rm, sync
+1. ✅ Core commands: project/env/var (list/get/set/unset/copy), sync
  2. ✅ Multi-environment support (--env flag)
  3. ✅ Cross-project variable copying (-p flag)
  4. ✅ Git repository detection
@@ -1153,15 +1150,15 @@ Command-specific flags:
 
  MVP is complete when:
 
- 1. ✅ User can run envault ls and see all projects
- 2. ✅ User can run envault add KEY value and value is stored in DB and .env
- 3. ✅ User can run envault get KEY and see full value
+1. ✅ User can run envault project list and see all projects
+2. ✅ User can run envault var set KEY value and value is stored in DB and .env
+3. ✅ User can run envault var get KEY and see full value
  4. ✅ User can run envault sync and .env syncs to DB
  5. ✅ User can use --env flag for multiple environments
-6. ✅ User can copy variables between projects with --project (alias: -p)
-7. ✅ User can remove variables with envault unset KEY
+6. ✅ User can copy variables between projects with envault var copy
+7. ✅ User can remove variables with envault var unset KEY
  8. ✅ All commands have --help documentation
- 9. ✅ JSON output mode works for ls and get
+9. ✅ JSON output mode works for project/env/var list commands
  10. ✅ Interactive prompts work (hidden, multiline)
  11. ✅ Unit and integration tests pass
  12. ✅ Package can be installed globally via bun install -g envault

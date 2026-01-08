@@ -22,7 +22,9 @@ export async function sync(args: ParsedArgs, db: EnvaultDB): Promise<void> {
     const project = db.findProjectByPath(gitRoot);
     if (!project) {
       console.error("Error: Project not tracked yet\n");
-      console.error("Run 'envault sync --from project' to import .env files into the store first.");
+      console.error(
+        "Run 'envault sync --from project' to import .env files into the store first."
+      );
       process.exit(1);
     }
 
