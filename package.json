@@ -37,10 +37,10 @@
   "engines": {
     "bun": ">=1.0.0"
   },
-  "author": "Your Name",
-  "license": "MIT",
+  "author": "Rohith Gandhi Ganesan",
+  "license": "AGPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/you/envault.git"
+    "url": "https://github.com/altic-dev/envault.git"
   }
 }
