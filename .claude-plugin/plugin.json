@@ -1,0 +1,18 @@
+{
+  "name": "envault-manager",
+  "version": "1.0.0",
+  "author": {
+    "name": "Rohith Gandhi Ganesan",
+    "email": "grohith327@gmail.com"
+  },
+  "homepage": "https://github.com/altic-dev/envault",
+  "repository": "https://github.com/altic-dev/envault",
+  "description": "Use when managing environment variables across projects, working with .env files, setting up project secrets, or using the envault CLI tool for centralized env var management",
+  "keywords": [
+    "environment-variables",
+    "env",
+    "secrets",
+    "configuration",
+    "dotenv"
+  ]
+}

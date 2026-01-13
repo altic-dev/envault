@@ -1,27 +1,20 @@
 {
   "name": "envault",
+  "description": "Official plugins for Envault - centralized environment variable management",
   "owner": {
     "name": "Rohith Gandhi Ganesan",
     "email": "grohith327@gmail.com"
   },
-  "metadata": {
-    "description": "Official plugins for Envault - centralized environment variable management",
-    "version": "1.0.0"
-  },
   "plugins": [
     {
       "name": "envault-manager",
+      "version": "1.0.0",
       "source": "./",
-      "description": "Use when managing environment variables across projects, working with .env files, setting up project secrets, or using the envault CLI tool for centralized env var management",
-      "keywords": [
-        "environment-variables",
-        "env",
-        "secrets",
-        "configuration",
-        "dotenv"
-      ],
-      "strict": false,
-      "skills": ["./skills/envault-manager"]
+      "author": {
+        "name": "Rohith Gandhi Ganesan",
+        "email": "grohith327@gmail.com"
+      },
+      "description": "Use when managing environment variables across projects, working with .env files, setting up project secrets, or using the envault CLI tool for centralized env var management"
     }
   ]
 }
